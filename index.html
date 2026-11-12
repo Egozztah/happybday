@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Una sorpresa para ti 🎁</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  /* ====== COLORES (cámbialos aquí para personalizar) ====== */
+  :root {
+    --rosa: #ff6f91;
+    --rosa-claro: #ffc2d1;
+    --morado: #845ec2;
+    --dorado: #ffd166;
+    --texto: #4a2c3a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    color: var(--texto);
+    background: linear-gradient(135deg, #ffdde7 0%, #e9d8ff 100%) fixed;
+    min-height: 100vh;
+    min-height: 100dvh;            /* altura real en móviles */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.2rem;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Corazones flotando de fondo */
+  .corazon-fondo {
+    position: fixed;
+    bottom: -40px;
+    opacity: .5;
+    animation: subir linear infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+  @keyframes subir {
+    to { transform: translateY(-115vh) rotate(25deg); opacity: 0; }
+  }
+
+  /* Tarjeta */
+  .tarjeta {
+    position: relative;
+    z-index: 2;
+    background: rgba(255, 255, 255, .78);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    border-radius: 28px;
+    padding: clamp(1.6rem, 6vw, 3rem) clamp(1.2rem, 5vw, 2rem);
+    width: 100%;
+    max-width: 440px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(132, 94, 194, .25);
+    transition: opacity .6s ease, transform .6s ease;
+  }
+
+  .oculto {
+    opacity: 0;
+    transform: scale(.9);
+    pointer-events: none;
+    position: absolute;
+  }
+
+  .regalo {
+    font-size: clamp(4rem, 18vw, 5rem);
+    display: inline-block;
+    animation: latido 1.6s ease-in-out infinite;
+  }
+  @keyframes latido {
+    0%, 100% { transform: scale(1) rotate(-4deg); }
+    50% { transform: scale(1.15) rotate(4deg); }
+  }
+
+  h1 {
+    font-family: 'Dancing Script', cursive;
+    font-size: clamp(2.1rem, 9vw, 2.7rem);
+    margin: 1rem 0 .4rem;
+    color: var(--morado);
+    line-height: 1.15;
+  }
+
+  p.sub { font-weight: 300; margin-bottom: 2rem; }
+
+  button {
+    font-family: inherit;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, var(--rosa), var(--morado));
+    border: none;
+    border-radius: 50px;
+    padding: .95rem 2.8rem;
+    min-height: 48px;               /* fácil de pulsar con el dedo */
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(255, 111, 145, .45);
+    transition: transform .2s ease, box-shadow .2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  @media (hover: hover) {
+    button:hover { transform: translateY(-3px) scale(1.04); box-shadow: 0 12px 28px rgba(255, 111, 145, .55); }
+  }
+  button:active { transform: scale(.97); }
+
+  /* ====== PANTALLA DEL MENSAJE ====== */
+  #mensaje {
+    opacity: 0;
+    transform: scale(.9);
+    position: absolute;
+    pointer-events: none;
+  }
+  #mensaje.visible {
+    opacity: 1;
+    transform: scale(1);
+    position: relative;
+    pointer-events: auto;
+    transition: opacity .8s ease .4s, transform .8s ease .4s;
+  }
+
+  #mensaje h2 {
+    font-family: 'Dancing Script', cursive;
+    font-size: clamp(2rem, 9vw, 2.8rem);
+    color: var(--rosa);
+    line-height: 1.15;
+    margin-bottom: 1.2rem;
+  }
+
+  /* Zona de la foto: contiene el corazón y, encima, el regalo envuelto */
+  .zona-foto {
+    position: relative;
+    width: min(72vw, 280px);
+    aspect-ratio: 1;
+    margin: 0 auto 1rem;
+  }
+
+  /* Marco de corazón: el borde es un degradado y la foto va dentro */
+  .corazon-marco {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--rosa), var(--morado));
+    clip-path: url(#forma-corazon);
+    filter: drop-shadow(0 10px 18px rgba(255, 111, 145, .4));
+    /* Oculto hasta que se abra el regalo */
+    opacity: 0;
+    transform: scale(.5);
+  }
+  .zona-foto.abierta .corazon-marco {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity .6s ease .3s, transform .9s cubic-bezier(.2, 1.5, .4, 1) .3s;
+  }
+  .corazon-foto {
+    position: absolute;
+    inset: 0;
+    transform: scale(.93);
+    transform-origin: 50% 48%;
+    clip-path: url(#forma-corazon);
+    background: var(--rosa-claro);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+  }
+  .corazon-foto img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;              /* la foto se recorta sin deformarse */
+  }
+
+  /* ====== REGALO ENVUELTO (tapa la foto hasta que se pulsa) ====== */
+  .envoltorio {
+    position: absolute;
+    inset: 8%;
+    z-index: 3;
+    border-radius: 16px;
+    cursor: pointer;
+    background:
+      radial-gradient(circle, rgba(255,255,255,.28) 0 5px, transparent 6px) 0 0 / 30px 30px,
+      linear-gradient(135deg, var(--rosa), var(--morado));
+    box-shadow: 0 14px 30px rgba(132, 94, 194, .45);
+    animation: balanceo 2.2s ease-in-out infinite;
+    -webkit-tap-highlight-color: transparent;
+    outline-offset: 6px;
+  }
+  /* Cintas doradas en cruz */
+  .envoltorio::before, .envoltorio::after {
+    content: '';
+    position: absolute;
+    background: var(--dorado);
+    box-shadow: 0 0 8px rgba(0, 0, 0, .12);
+  }
+  .envoltorio::before { left: 50%; top: 0; bottom: 0; width: 15%; transform: translateX(-50%); }
+  .envoltorio::after  { top: 50%; left: 0; right: 0; height: 15%; transform: translateY(-50%); }
+
+  .lazo {
+    position: absolute;
+    z-index: 1;
+    left: 50%;
+    top: -9%;
+    transform: translateX(-50%);
+    font-size: clamp(2.6rem, 14vw, 3.4rem);
+    line-height: 1;
+    filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .2));
+  }
+
+  @keyframes balanceo {
+    0%, 100% { transform: rotate(-2deg) scale(1); }
+    50%      { transform: rotate(2deg) scale(1.04); }
+  }
+
+  /* Al pulsar: el regalo salta y desaparece */
+  .envoltorio.desenvuelto {
+    pointer-events: none;
+    animation: desenvolver .7s ease-in forwards;
+  }
+  @keyframes desenvolver {
+    0%   { transform: scale(1); opacity: 1; }
+    30%  { transform: scale(1.15) rotate(-4deg); opacity: 1; }
+    100% { transform: translateY(-60px) scale(1.5) rotate(10deg); opacity: 0; }
+  }
+
+  .pista {
+    font-size: .95rem;
+    font-weight: 600;
+    color: var(--morado);
+    max-height: 3rem;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    animation: pulso 1.4s ease-in-out infinite;
+    transition: max-height .5s ease, opacity .4s ease, margin .5s ease;
+  }
+  .pista.oculta { max-height: 0; opacity: 0; margin-bottom: 0; animation: none; }
+  @keyframes pulso { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+
+  .texto-foto {
+    line-height: 1.7;
+    font-size: clamp(.95rem, 3.8vw, 1.05rem);
+  }
+</style>
+</head>
+<body>
+
+  <!-- Forma de corazón (invisible), la usa el CSS para recortar la foto -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <clipPath id="forma-corazon" clipPathUnits="objectBoundingBox">
+        <path d="M0.5,0.95 C0.5,0.95 0.04,0.62 0.04,0.32 C0.04,0.15 0.17,0.05 0.29,0.05 C0.39,0.05 0.47,0.1 0.5,0.18 C0.53,0.1 0.61,0.05 0.71,0.05 C0.83,0.05 0.96,0.15 0.96,0.32 C0.96,0.62 0.5,0.95 0.5,0.95 Z"/>
+      </clipPath>
+    </defs>
+  </svg>
+
+  <!-- PANTALLA INICIAL -->
+  <main class="tarjeta" id="inicio">
+    <div class="regalo">🎁</div>
+    <h1>Tengo algo para ti jevita</h1>
+    <p class="sub">Una sorpresa espeshial en tu día espeshial</p>
+    <button id="btn-abrir">Ábrelo</button>
+  </main>
+
+  <!-- MENSAJE: aparece justo después del confeti -->
+  <section class="tarjeta" id="mensaje">
+    <h2>¡Feliz cumpleaños, ANABELAAA!</h2>
+
+    <div class="zona-foto" id="zona-foto">
+
+      <!-- 📷 TU FOTO: guarda la imagen como "foto.jpg" en la misma carpeta que este archivo
+           (o cambia el nombre en src). Si no la encuentra, se ve un corazón de relleno. -->
+      <div class="corazon-marco">
+        <div class="corazon-foto">
+          <img src="foto.jpg" alt="Nuestra foto"
+               onerror="this.remove(); this.parentNode.textContent='💘';">
+        </div>
+      </div>
+
+      <!-- 🎁 El regalo que tapa la foto: hay que tocarlo para abrirlo -->
+      <div class="envoltorio" id="envoltorio" role="button" tabindex="0"
+           aria-label="Toca para abrir el regalo">
+        <span class="lazo">🎀</span>
+      </div>
+    </div>
+
+    <p class="pista" id="pista">Toca el regalo para abrirlo ✨</p>
+
+    <!-- ✍️ TU TEXTO: cámbialo por lo que quieras decirle -->
+    <p class="texto-foto">
+      Felices 19 años Anabeluca, espero que disfrutes el resto de lo que quede de noche con nosotros
+      y que te encanten los regalos que con mucho cariño te hemos preparado. Te amo por y para siempre 💘
+    </p>
+  </section>
+
+  <script>
+    // ====== Corazones flotantes de fondo ======
+    const emojis = ['💖', '💗', '💕', '✨', '🌸', '💘'];
+    const cantidad = window.innerWidth < 600 ? 10 : 18;   // menos en móvil
+    for (let i = 0; i < cantidad; i++) {
+      const c = document.createElement('span');
+      c.className = 'corazon-fondo';
+      c.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      c.style.left = Math.random() * 100 + 'vw';
+      c.style.fontSize = (1 + Math.random() * 1.4) + 'rem';
+      c.style.animationDuration = (8 + Math.random() * 10) + 's';
+      c.style.animationDelay = (Math.random() * 10) + 's';
+      document.body.appendChild(c);
+    }
+
+    // ====== Motor de confeti propio (sin librerías externas) ======
+    const lienzo = document.createElement('canvas');
+    lienzo.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999';
+    document.body.appendChild(lienzo);
+    const ctx = lienzo.getContext('2d');
+    let piezas = [];
+    let animando = false;
+
+    function ajustarLienzo() {
+      const d = window.devicePixelRatio || 1;
+      lienzo.width = window.innerWidth * d;
+      lienzo.height = window.innerHeight * d;
+      ctx.setTransform(d, 0, 0, d, 0, 0);
+    }
+    ajustarLienzo();
+    window.addEventListener('resize', ajustarLienzo);
+
+    // Crea 'particleCount' trozos de papel que salen de 'origin' hacia 'angle'
+    function confetti(opciones) {
+      const o = opciones || {};
+      const cantidad = o.particleCount || 50;
+      const angulo   = o.angle !== undefined ? o.angle : 90;
+      const apertura = o.spread !== undefined ? o.spread : 45;
+      const origen   = o.origin || {};
+      const ox = origen.x !== undefined ? origen.x : 0.5;
+      const oy = origen.y !== undefined ? origen.y : 0.5;
+      const paleta = o.colors || ['#ffffff'];
+      const escala = Math.min(window.innerWidth, 700) / 700;   // menos fuerza en móvil
+
+      for (let i = 0; i < cantidad; i++) {
+        const dir = (angulo + (Math.random() - 0.5) * apertura) * Math.PI / 180;
+        const vel = (8 + Math.random() * 12) * Math.max(escala, 0.6);
+        piezas.push({
+          x: ox * window.innerWidth,
+          y: oy * window.innerHeight,
+          vx: Math.cos(dir) * vel,
+          vy: -Math.sin(dir) * vel,
+          w: 6 + Math.random() * 6,
+          h: 4 + Math.random() * 5,
+          rot: Math.random() * 360,
+          vr: (Math.random() - 0.5) * 20,
+          color: paleta[Math.floor(Math.random() * paleta.length)],
+          vida: 0,
+          max: 110 + Math.random() * 60
+        });
+      }
+      if (!animando) {
+        animando = true;
+        requestAnimationFrame(pintarConfeti);
+      }
+    }
+
+    function pintarConfeti() {
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      piezas = piezas.filter(p => p.vida < p.max && p.y < window.innerHeight + 30);
+
+      for (const p of piezas) {
+        p.vx *= 0.985;                 // rozamiento con el aire
+        p.vy = p.vy * 0.985 + 0.35;    // gravedad
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.vr;
+        p.vida++;
+
+        const desvanecer = Math.max(0, (p.vida - (p.max - 40)) / 40);
+        ctx.save();
+        ctx.globalAlpha = 1 - desvanecer;
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot * Math.PI / 180);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+      }
+
+      if (piezas.length > 0) {
+        requestAnimationFrame(pintarConfeti);
+      } else {
+        animando = false;
+        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      }
+    }
+
+    // ====== Confeti de la pantalla inicial ======
+    const colores = ['#ff6f91', '#ffc2d1', '#845ec2', '#ffd166', '#ffffff'];
+
+    function lanzarConfeti() {
+      confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 }, colors: colores });
+
+      const fin = Date.now() + 2500;
+      (function frame() {
+        confetti({ particleCount: 4, angle: 60,  spread: 60, origin: { x: 0 }, colors: colores });
+        confetti({ particleCount: 4, angle: 120, spread: 60, origin: { x: 1 }, colors: colores });
+        if (Date.now() < fin) requestAnimationFrame(frame);
+      })();
+    }
+
+    // ====== Botón Ábrelo: confeti y aparece el mensaje con el regalo envuelto ======
+    const inicio  = document.getElementById('inicio');
+    const mensaje = document.getElementById('mensaje');
+
+    document.getElementById('btn-abrir').addEventListener('click', () => {
+      inicio.classList.add('oculto');
+      mensaje.classList.add('visible');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      try { lanzarConfeti(); } catch (e) { console.error(e); }
+    });
+
+    // ====== Desenvolver el regalo para ver la foto ======
+    const zonaFoto  = document.getElementById('zona-foto');
+    const envoltorio = document.getElementById('envoltorio');
+    const pista     = document.getElementById('pista');
+
+    function desenvolver() {
+      if (zonaFoto.classList.contains('abierta')) return;   // solo se abre una vez
+      zonaFoto.classList.add('abierta');
+      envoltorio.classList.add('desenvuelto');
+      pista.classList.add('oculta');
+
+      // Confeti saliendo justo desde el centro de la foto
+      try {
+        const r = zonaFoto.getBoundingClientRect();
+        confetti({
+          particleCount: 100,
+          spread: 90,
+          origin: {
+            x: (r.left + r.width / 2) / window.innerWidth,
+            y: (r.top + r.height / 2) / window.innerHeight
+          },
+          colors: colores
+        });
+      } catch (e) { console.error(e); }
+
+      setTimeout(() => envoltorio.remove(), 800);
+    }
+
+    envoltorio.addEventListener('click', desenvolver);
+    envoltorio.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); desenvolver(); }
+    });
+  </script>
+</body>
+</html>
